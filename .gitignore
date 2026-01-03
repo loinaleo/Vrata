@@ -1,0 +1,30 @@
+# --- Build Outputs ---
+Debug/
+Release/
+bin/
+obj/
+
+# --- Intermediate Files ---
+*.o
+*.su
+*.d
+*.lst
+*.map
+*.elf
+*.bin
+*.hex
+
+# --- IDE Specific (STM32CubeIDE/Eclipse) ---
+.settings/
+.metadata/
+.analytics
+.log
+*.launch
+
+# --- User Specific ---
+*.user
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
