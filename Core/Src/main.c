@@ -130,7 +130,9 @@ int main(void)
 	  continue;  // Skip sensor code during test
 	  */
 	  // ===== END TEST =====
-
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+/*
 	  //Read sensors
 	  ON=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
 	  OFF=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9);
@@ -160,6 +162,7 @@ int main(void)
 		  Set_Servo_Angle(&htim2, TIM_CHANNEL_1, 30);
 		  Set_Servo_Angle(&htim2, TIM_CHANNEL_2, 30);
 	  }
+*/
   }
   /* USER CODE END 3 */
 }
