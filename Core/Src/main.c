@@ -107,6 +107,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  uint32_t led_start_time = 0;
+  unsigned int ledOn = 0;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -130,8 +133,20 @@ int main(void)
 	  continue;  // Skip sensor code during test
 	  */
 	  // ===== END TEST =====
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+	  uint32_t elapsed = HAL_GetTick() - led_start_time;
+	  if (elapsed > 1000) {
+		  if (ledOn){
+			  ledOn = 0;
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+			  led_start_time = HAL_GetTick();
+		  } else {
+			  ledOn = 1;
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+			  led_start_time = HAL_GetTick();
+		  }
+	  }
 /*
 	  //Read sensors
 	  ON=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
