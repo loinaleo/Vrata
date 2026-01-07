@@ -48,6 +48,7 @@
 int ON;
 int OFF;
 int BLOCK;
+volatile int BLINK;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,11 +59,31 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//set angle
+//Set angle
 void Set_Servo_Angle(TIM_HandleTypeDef *htim, uint32_t channel, uint8_t angle){
-	//degrees (0-180) to pulse width (210-1050)
+	//Degrees (0-180) to pulse width (210-1050)
 	uint32_t pulse_length=210+(angle*(1050-210)/180);
 	__HAL_TIM_SET_COMPARE(htim, channel, pulse_length);
+}
+//Automatically called every time the timer reaches the 500 ms period
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if(htim->Instance==TIM3) {
+        if(BLINK==1){
+        	//Initialize LEDs in opposite states for alternating blink
+        	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+        	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+        	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
+            //Alternately blink
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+        }else{
+            //Both LEDs OFF if BLOCK is 0 (or anything else)
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+        }
+    }
 }
 /* USER CODE END 0 */
 
@@ -101,53 +122,17 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  uint32_t led_start_time = 0;
-  unsigned int ledOn = 0;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-	  // ===== SIMPLE TEST - uncomment to test hardware =====
-	  // Test: LED and servo cycle every 3 seconds (no sensors needed)
-	  /*
-	  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 100);  // LED ON
-	  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 100);  // LED ON
-	  Set_Servo_Angle(&htim2, TIM_CHANNEL_1, 120);  // Barrier down
-	  Set_Servo_Angle(&htim2, TIM_CHANNEL_2, 120);  // Barrier down
-	  HAL_Delay(3000);
-
-	  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);  // LED OFF
-	  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);  // LED OFF
-	  Set_Servo_Angle(&htim2, TIM_CHANNEL_1, 30);  // Barrier up
-	  Set_Servo_Angle(&htim2, TIM_CHANNEL_2, 30);  // Barrier up
-	  HAL_Delay(3000);
-	  continue;  // Skip sensor code during test
-	  */
-	  // ===== END TEST =====
-	  uint32_t elapsed = HAL_GetTick() - led_start_time;
-	  if (elapsed > 1000) {
-		  if (ledOn){
-			  ledOn = 0;
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-			  led_start_time = HAL_GetTick();
-		  } else {
-			  ledOn = 1;
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-			  led_start_time = HAL_GetTick();
-		  }
-	  }
-/*
 	  //Read sensors
 	  ON=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
 	  OFF=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9);
@@ -165,19 +150,17 @@ int main(void)
 
 	  //Blocking road
 	  if(BLOCK==1){
-		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 50);
-		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 50);
+		  BLINK=1;
 		  HAL_Delay(2000);
 		  Set_Servo_Angle(&htim2, TIM_CHANNEL_1, 120);
 		  Set_Servo_Angle(&htim2, TIM_CHANNEL_2, 120);
 	  }
 	  else if(BLOCK==0){
-		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
-		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
+		  BLINK=0;
 		  Set_Servo_Angle(&htim2, TIM_CHANNEL_1, 30);
 		  Set_Servo_Angle(&htim2, TIM_CHANNEL_2, 30);
 	  }
-*/
+
   }
   /* USER CODE END 3 */
 }
